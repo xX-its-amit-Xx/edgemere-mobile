@@ -1,4 +1,5 @@
-// Shared design tokens — kept in sync with the website's CSS vars.
+// Shared design tokens — mirror the website's CSS vars.
+
 export const theme = {
   colors: {
     gold: "#c9a96e",
@@ -13,11 +14,17 @@ export const theme = {
     success: "#22c55e",
     danger: "#f87171",
   },
+  // Loaded via @expo-google-fonts in app/_layout.tsx. Until fontsReady,
+  // text falls back to system serif/sans — we hold rendering with a splash.
   fonts: {
-    // System fonts for now; can swap to Cormorant Garamond / Plus Jakarta
-    // via expo-font once we add Google Fonts on the mobile side.
-    display: "serif",
-    body: "System",
+    displayRegular: "CormorantGaramond_400Regular",
+    displayItalic: "CormorantGaramond_400Regular_Italic",
+    displayBold: "CormorantGaramond_700Bold",
+    displayBoldItalic: "CormorantGaramond_700Bold_Italic",
+    body: "PlusJakartaSans_400Regular",
+    bodyMedium: "PlusJakartaSans_500Medium",
+    bodyBold: "PlusJakartaSans_700Bold",
+    bodyExtraBold: "PlusJakartaSans_800ExtraBold",
   },
   radii: { sm: 6, md: 10, lg: 16, pill: 9999 },
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
@@ -30,6 +37,8 @@ export const SHOP = {
   address: "129 Hartford Tpke, Shrewsbury, MA 01545",
   booksy: "https://booksy.com/en-us/1369750_edgemere-barbershop_barber-shop_22487_shrewsbury",
   apiBase: "https://edgemerebarbershop.com",
+  // Same hero photo as the website's <Hero /> background.
+  heroPhoto: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1200&auto=format&fit=crop",
   barbers: [
     {
       key: "jb",

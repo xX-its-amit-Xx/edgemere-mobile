@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -8,17 +9,17 @@ import {
   Text,
   TextInput,
   View,
-  ActivityIndicator,
 } from "react-native";
-import { Svg, Circle, Path, Ellipse } from "react-native-svg";
+import { Send } from "lucide-react-native";
 import { SHOP, theme } from "../theme";
+import BarberAvatar from "../components/BarberAvatar";
 
 type Message = { role: "user" | "assistant"; content: string };
 
 const WELCOME: Message = {
   role: "assistant",
   content:
-    "Hey! I'm Eddie, Edgemere's AI barber. Ask me about hours, prices, the barbers, walk-in wait — or anything else.",
+    "Hey — I'm Eddie, Edgemere's AI barber. Ask me about hours, prices, the barbers, walk-in wait, or anything else.",
 };
 
 const QUICKS = [
@@ -28,42 +29,15 @@ const QUICKS = [
   "Do you take walk-ins?",
 ];
 
-function BarberAvatar({ size = 28 }: { size?: number }) {
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: theme.colors.black2,
-        borderWidth: 1.5,
-        borderColor: theme.colors.gold,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Svg width={size * 0.84} height={size * 0.84} viewBox="0 0 64 64">
-        <Circle cx="32" cy="34" r="17" fill="#e8c98a" />
-        <Path d="M15 28 Q15 14 32 12 Q49 14 49 28 Q49 22 46 19 Q40 11 32 11 Q24 11 18 19 Q15 22 15 28 Z" fill="#1a1209" />
-        <Ellipse cx="26" cy="32" rx="1.4" ry="1.7" fill="#0a0a0a" />
-        <Ellipse cx="38" cy="32" rx="1.4" ry="1.7" fill="#0a0a0a" />
-        <Path d="M19 42 Q24 38 32 41 Q40 38 45 42 Q42 45 38 44 Q35 44 32 43 Q29 44 26 44 Q22 45 19 42 Z" fill="#3a2818" />
-        <Path d="M27 52 L32 49 L37 52 L37 55 L32 52 L27 55 Z" fill={theme.colors.gold} />
-      </Svg>
-    </View>
-  );
-}
-
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [streamText, setStreamText] = useState("");
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
-  }, [messages, streamText]);
+  }, [messages, streaming]);
 
   const send = useCallback(
     async (text: string) => {
@@ -74,7 +48,6 @@ export default function ChatScreen() {
       setMessages(next);
       setInput("");
       setStreaming(true);
-      setStreamText("");
 
       try {
         const res = await fetch(`${SHOP.apiBase}/api/chat`, {
@@ -91,20 +64,16 @@ export default function ChatScreen() {
               if (j?.error) errText = j.error;
             } catch { /* ignore */ }
           } else if (res.status === 429) {
-            errText = "Slow down a moment — try again in a few seconds!";
+            errText = "Slow down a moment — try again in a few seconds.";
           }
           setMessages((p) => [...p, { role: "assistant", content: errText }]);
           setStreaming(false);
           return;
         }
 
-        // React Native fetch doesn't expose ReadableStream natively — read full body.
-        // (For a future iteration, swap to react-native-fetch-api or a polyfill
-        //  to get token-by-token streaming. Full-response is acceptable for now —
-        //  Groq's llama-3.3-70b finishes a 400-token reply in 1-2 seconds.)
+        // RN's fetch doesn't expose ReadableStream — read the full body once.
         const fullText = await res.text();
         setMessages((p) => [...p, { role: "assistant", content: fullText }]);
-        setStreamText("");
       } catch {
         setMessages((p) => [
           ...p,
@@ -117,13 +86,13 @@ export default function ChatScreen() {
         setStreaming(false);
       }
     },
-    [messages, streaming]
+    [messages, streaming],
   );
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
       style={styles.root}
     >
       <ScrollView
@@ -139,7 +108,7 @@ export default function ChatScreen() {
               m.role === "user" ? styles.rowUser : styles.rowAssistant,
             ]}
           >
-            {m.role === "assistant" && <BarberAvatar size={28} />}
+            {m.role === "assistant" && <BarberAvatar size={30} ringed />}
             <View
               style={[
                 styles.bubble,
@@ -154,15 +123,20 @@ export default function ChatScreen() {
         ))}
         {streaming && (
           <View style={[styles.row, styles.rowAssistant]}>
-            <BarberAvatar size={28} />
-            <View style={[styles.bubble, styles.bubbleAssistant, { minHeight: 36, justifyContent: "center" }]}>
+            <BarberAvatar size={30} ringed />
+            <View
+              style={[
+                styles.bubble,
+                styles.bubbleAssistant,
+                { minHeight: 40, justifyContent: "center", paddingHorizontal: 16 },
+              ]}
+            >
               <ActivityIndicator color={theme.colors.gold} size="small" />
             </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Quick buttons */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -173,7 +147,7 @@ export default function ChatScreen() {
           <Pressable
             key={q}
             disabled={streaming}
-            style={styles.quickBtn}
+            style={[styles.quickBtn, streaming && { opacity: 0.5 }]}
             onPress={() => send(q)}
           >
             <Text style={styles.quickBtnText}>{q}</Text>
@@ -181,13 +155,12 @@ export default function ChatScreen() {
         ))}
       </ScrollView>
 
-      {/* Input */}
       <View style={styles.inputBar}>
         <TextInput
           value={input}
           onChangeText={setInput}
           placeholder="Ask Eddie…"
-          placeholderTextColor={theme.colors.whiteFainter}
+          placeholderTextColor="rgba(242,239,232,0.35)"
           style={styles.input}
           multiline
           editable={!streaming}
@@ -200,8 +173,9 @@ export default function ChatScreen() {
             (streaming || !input.trim()) && styles.sendBtnDisabled,
           ]}
           onPress={() => send(input)}
+          accessibilityLabel="Send message"
         >
-          <Text style={styles.sendBtnText}>Send</Text>
+          <Send size={15} color={theme.colors.black} strokeWidth={2.4} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -211,14 +185,14 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.black },
   scroll: { flex: 1 },
-  scrollContent: { padding: 14, gap: 10 },
-  row: { flexDirection: "row", alignItems: "flex-end", gap: 8 },
+  scrollContent: { padding: 16, gap: 12 },
+  row: { flexDirection: "row", alignItems: "flex-end", gap: 9 },
   rowUser: { justifyContent: "flex-end" },
   rowAssistant: { justifyContent: "flex-start" },
   bubble: {
-    maxWidth: "82%",
+    maxWidth: "78%",
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderRadius: 16,
   },
   bubbleUser: {
@@ -226,59 +200,82 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   bubbleAssistant: {
-    backgroundColor: theme.colors.black2,
+    backgroundColor: "rgba(201,169,110,0.07)",
     borderTopLeftRadius: 4,
     borderWidth: 1,
     borderColor: "rgba(201,169,110,0.2)",
   },
-  textUser: { color: theme.colors.black, fontSize: 14, lineHeight: 20 },
-  textAssistant: { color: theme.colors.white, fontSize: 14, lineHeight: 20 },
+  textUser: {
+    fontFamily: theme.fonts.body,
+    color: theme.colors.black,
+    fontSize: 14,
+    lineHeight: 21,
+    letterSpacing: 0.2,
+  },
+  textAssistant: {
+    fontFamily: theme.fonts.body,
+    color: theme.colors.white,
+    fontSize: 14,
+    lineHeight: 21,
+    letterSpacing: 0.2,
+  },
   quicks: {
-    maxHeight: 44,
+    maxHeight: 46,
     borderTopWidth: 1,
     borderTopColor: "rgba(201,169,110,0.12)",
   },
-  quicksContent: { padding: 10, gap: 8 },
+  quicksContent: { padding: 10, gap: 8, alignItems: "center" },
   quickBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderWidth: 1,
-    borderColor: "rgba(201,169,110,0.3)",
+    borderColor: "rgba(201,169,110,0.32)",
     borderRadius: 999,
     backgroundColor: "rgba(201,169,110,0.06)",
   },
-  quickBtnText: { color: theme.colors.whiteFaint, fontSize: 12 },
+  quickBtnText: {
+    fontFamily: theme.fonts.bodyMedium,
+    color: "rgba(242,239,232,0.7)",
+    fontSize: 11.5,
+    letterSpacing: 0.3,
+  },
   inputBar: {
     flexDirection: "row",
-    padding: 10,
-    gap: 8,
+    padding: 11,
+    gap: 9,
     borderTopWidth: 1,
     borderTopColor: "rgba(201,169,110,0.14)",
     alignItems: "flex-end",
+    backgroundColor: theme.colors.black2,
   },
   input: {
     flex: 1,
     color: theme.colors.white,
-    backgroundColor: theme.colors.black2,
+    fontFamily: theme.fonts.body,
+    backgroundColor: "rgba(255,255,255,0.04)",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
     maxHeight: 100,
+    letterSpacing: 0.2,
+    borderWidth: 1,
+    borderColor: "rgba(201,169,110,0.18)",
   },
   sendBtn: {
     backgroundColor: theme.colors.gold,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 10,
+    minWidth: 44,
+    alignItems: "center",
+    shadowColor: theme.colors.gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
   },
   sendBtnDisabled: {
     backgroundColor: "rgba(201,169,110,0.3)",
-  },
-  sendBtnText: {
-    color: theme.colors.black,
-    fontWeight: "700",
-    fontSize: 13,
-    letterSpacing: 1,
+    shadowOpacity: 0,
   },
 });

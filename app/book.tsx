@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import * as WebBrowser from "expo-web-browser";
+import { ArrowUpRight, Star, Phone } from "lucide-react-native";
 import { SHOP, theme } from "../theme";
 import { getLiveStatus } from "../lib/status";
+import StatusPill from "../components/StatusPill";
+import { GoldRule, LabeledRule } from "../components/GoldAccent";
+import Reveal from "../components/Reveal";
 
 export default function BookScreen() {
   const [status, setStatus] = useState(getLiveStatus());
@@ -12,166 +16,202 @@ export default function BookScreen() {
   }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Live status hero */}
-      <View
-        style={[
-          styles.statusHero,
-          { borderColor: status.open ? theme.colors.success : theme.colors.danger },
-        ]}
-      >
-        <View
-          style={[
-            styles.dot,
-            { backgroundColor: status.open ? theme.colors.success : theme.colors.danger },
-          ]}
-        />
-        <View>
-          <Text style={[styles.statusBadge, { color: status.open ? theme.colors.success : theme.colors.danger }]}>
-            {status.open ? "OPEN NOW" : "CLOSED"}
-          </Text>
-          {status.open && status.wait ? (
-            <Text style={styles.waitHeadline}>{status.wait}</Text>
-          ) : (
-            <Text style={styles.waitHeadline}>{status.label}</Text>
-          )}
+    <ScrollView
+      style={{ backgroundColor: theme.colors.black }}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── Live status hero ── */}
+      <Reveal delay={0}>
+        <View style={styles.statusWrap}>
+          <StatusPill status={status} />
         </View>
-      </View>
+      </Reveal>
 
-      <Text style={styles.sectionLabel}>PICK YOUR BARBER</Text>
+      {/* ── Section label ── */}
+      <Reveal delay={150}>
+        <View style={styles.sectionHeader}>
+          <LabeledRule>
+            <Text style={styles.sectionLabel}>PICK YOUR BARBER</Text>
+          </LabeledRule>
+        </View>
+      </Reveal>
 
-      {SHOP.barbers.map((b) => (
-        <Pressable
-          key={b.key}
-          style={styles.barberCard}
-          onPress={() => WebBrowser.openBrowserAsync(b.booksy)}
-          accessibilityLabel={`Book with ${b.name} on Booksy`}
-        >
-          <View style={styles.barberHeader}>
-            <Text style={styles.barberStars}>5.0 ★ · {b.reviews} reviews</Text>
-          </View>
-          <Text style={styles.barberName}>{b.name}</Text>
-          <Text style={styles.barberFullName}>{b.fullName}</Text>
-          <Text style={styles.barberSpecialty}>{b.specialty}</Text>
-          <Text style={styles.barberCta}>Book on Booksy →</Text>
-        </Pressable>
+      <Reveal delay={250}>
+        <Text style={styles.sectionLead}>
+          All three are <Text style={styles.italic}>5-star</Text> rated. Tap a card to
+          book directly on Booksy.
+        </Text>
+      </Reveal>
+
+      {/* ── Barber cards ── */}
+      {SHOP.barbers.map((b, i) => (
+        <Reveal key={b.key} delay={350 + i * 80}>
+          <Pressable
+            style={styles.barberCard}
+            onPress={() => WebBrowser.openBrowserAsync(b.booksy)}
+            accessibilityLabel={`Book with ${b.name} on Booksy`}
+          >
+            <View style={styles.barberHeader}>
+              <View style={styles.starsRow}>
+                {[0, 1, 2, 3, 4].map((s) => (
+                  <Star
+                    key={s}
+                    size={10}
+                    color={theme.colors.gold}
+                    fill={theme.colors.gold}
+                    strokeWidth={0}
+                  />
+                ))}
+                <Text style={styles.barberStars}>{b.reviews} reviews</Text>
+              </View>
+              <ArrowUpRight size={18} color="rgba(201,169,110,0.55)" strokeWidth={1.6} />
+            </View>
+            <Text style={styles.barberName}>{b.name}</Text>
+            <Text style={styles.barberFullName}>{b.fullName}</Text>
+            <View style={styles.barberDivider}>
+              <GoldRule width={32} opacity={0.5} />
+            </View>
+            <Text style={styles.barberSpecialty}>{b.specialty}</Text>
+            <Text style={styles.barberCta}>BOOK ON BOOKSY  →</Text>
+          </Pressable>
+        </Reveal>
       ))}
 
-      <Pressable
-        style={styles.shopCard}
-        onPress={() => WebBrowser.openBrowserAsync(SHOP.booksy)}
-      >
-        <Text style={styles.shopCardText}>Or book without choosing a specific barber →</Text>
-      </Pressable>
+      {/* ── Shop fallback ── */}
+      <Reveal delay={650}>
+        <Pressable
+          style={styles.shopCard}
+          onPress={() => WebBrowser.openBrowserAsync(SHOP.booksy)}
+        >
+          <Text style={styles.shopCardText}>
+            Or book without choosing a specific barber →
+          </Text>
+        </Pressable>
+      </Reveal>
 
-      <View style={styles.divider} />
-
-      <Text style={styles.sectionLabel}>OLD SCHOOL</Text>
-      <Pressable
-        style={styles.callCard}
-        onPress={() => Linking.openURL(`tel:${SHOP.phone}`)}
-      >
-        <Text style={styles.callCardTitle}>Just call us</Text>
-        <Text style={styles.callCardPhone}>{SHOP.phoneDisplay}</Text>
-      </Pressable>
+      {/* ── Old school ── */}
+      <Reveal delay={750}>
+        <View style={styles.callBlock}>
+          <Text style={styles.callTagline}>
+            <Text style={styles.italic}>Old school?</Text>
+          </Text>
+          <Pressable
+            style={styles.callRow}
+            onPress={() => Linking.openURL(`tel:${SHOP.phone}`)}
+          >
+            <Phone size={18} color={theme.colors.gold} strokeWidth={1.6} />
+            <Text style={styles.callPhone}>{SHOP.phoneDisplay}</Text>
+          </Pressable>
+        </View>
+      </Reveal>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, paddingBottom: 48 },
-  statusHero: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    padding: 18,
-    borderRadius: 12,
-    borderWidth: 1,
-    backgroundColor: "rgba(20,20,20,0.7)",
-    marginBottom: 28,
-  },
-  dot: { width: 14, height: 14, borderRadius: 7 },
-  statusBadge: { fontSize: 11, fontWeight: "800", letterSpacing: 2, marginBottom: 4 },
-  waitHeadline: { color: theme.colors.white, fontSize: 18, fontFamily: theme.fonts.display },
+  container: { paddingHorizontal: 22, paddingTop: 18, paddingBottom: 56 },
+
+  statusWrap: { marginBottom: 30 },
+
+  sectionHeader: { alignItems: "center", marginBottom: 10 },
   sectionLabel: {
-    color: theme.colors.gold,
-    fontSize: 11,
-    letterSpacing: 3,
-    marginBottom: 14,
-  },
-  barberCard: {
-    backgroundColor: theme.colors.black2,
-    borderRadius: 10,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "rgba(201,169,110,0.28)",
-    marginBottom: 12,
-  },
-  barberHeader: { marginBottom: 8 },
-  barberStars: {
+    fontFamily: theme.fonts.bodyMedium,
     color: theme.colors.gold,
     fontSize: 10,
-    letterSpacing: 2,
+    letterSpacing: 4,
   },
-  barberName: {
-    color: theme.colors.goldLight,
-    fontSize: 24,
-    fontFamily: theme.fonts.display,
+  sectionLead: {
+    fontFamily: theme.fonts.body,
+    color: "rgba(242,239,232,0.6)",
+    fontSize: 13.5,
+    textAlign: "center",
+    lineHeight: 21,
+    marginBottom: 26,
+    letterSpacing: 0.3,
   },
-  barberFullName: {
-    color: theme.colors.whiteFainter,
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  barberSpecialty: {
-    color: theme.colors.whiteFaint,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  barberCta: {
-    color: theme.colors.gold,
-    fontSize: 12,
-    letterSpacing: 2,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  shopCard: {
-    alignItems: "center",
-    padding: 14,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  shopCardText: {
-    color: theme.colors.whiteFaint,
-    fontSize: 13,
-    textDecorationLine: "underline",
-    textDecorationStyle: "dashed",
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "rgba(201,169,110,0.18)",
-    marginVertical: 16,
-  },
-  callCard: {
-    backgroundColor: theme.colors.black2,
-    borderRadius: 10,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "rgba(201,169,110,0.28)",
-    alignItems: "center",
-  },
-  callCardTitle: {
+  italic: {
+    fontFamily: theme.fonts.displayBoldItalic,
+    fontStyle: "italic",
     color: theme.colors.goldLight,
     fontSize: 16,
-    fontFamily: theme.fonts.display,
-    fontStyle: "italic",
-    marginBottom: 6,
   },
-  callCardPhone: {
+
+  barberCard: {
+    backgroundColor: "rgba(16,16,16,0.9)",
+    borderRadius: 4,
+    paddingVertical: 22,
+    paddingHorizontal: 22,
+    borderWidth: 1,
+    borderColor: "rgba(201,169,110,0.3)",
+    marginBottom: 14,
+  },
+  barberHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
+  },
+  starsRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  barberStars: {
+    fontFamily: theme.fonts.bodyMedium,
+    color: "rgba(201,169,110,0.7)",
+    fontSize: 9.5,
+    letterSpacing: 1.8,
+    marginLeft: 7,
+  },
+  barberName: {
+    fontFamily: theme.fonts.displayBold,
+    color: theme.colors.goldLight,
+    fontSize: 30,
+    letterSpacing: 0.5,
+  },
+  barberFullName: {
+    fontFamily: theme.fonts.body,
+    color: "rgba(242,239,232,0.4)",
+    fontSize: 11,
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  barberDivider: { marginVertical: 14 },
+  barberSpecialty: {
+    fontFamily: theme.fonts.body,
+    color: "rgba(242,239,232,0.78)",
+    fontSize: 14,
+    lineHeight: 21,
+    marginBottom: 16,
+    letterSpacing: 0.3,
+  },
+  barberCta: {
+    fontFamily: theme.fonts.bodyBold,
+    color: theme.colors.gold,
+    fontSize: 10.5,
+    letterSpacing: 3,
+  },
+
+  shopCard: { alignItems: "center", paddingVertical: 14, marginBottom: 32 },
+  shopCardText: {
+    fontFamily: theme.fonts.body,
+    color: "rgba(242,239,232,0.55)",
+    fontSize: 12.5,
+    letterSpacing: 0.3,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(201,169,110,0.4)",
+    paddingBottom: 3,
+  },
+
+  callBlock: {
+    alignItems: "center",
+    paddingVertical: 24,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(201,169,110,0.15)",
+  },
+  callTagline: { marginBottom: 14 },
+  callRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  callPhone: {
+    fontFamily: theme.fonts.displayBold,
     color: theme.colors.gold,
     fontSize: 22,
-    fontWeight: "600",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 });
