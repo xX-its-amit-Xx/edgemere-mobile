@@ -1,50 +1,34 @@
 import { StyleSheet, Text, View } from "react-native";
 import { theme } from "../theme";
 
-type Props = {
-  /** Font size for each half. Default 56. */
-  size?: number;
-  /** "row" stacks horizontally (EDGEMERE one line); "column" stacks vertically (EDGE / MERE). */
-  layout?: "row" | "column";
-};
+type Props = { size?: number; color?: string };
 
 /**
- * EDGE / MERE wordmark — the same letterform treatment as the website Hero:
- * EDGE in white, MERE in gold italic. Display font is Cormorant Garamond.
+ * EDGEMERE wordmark — single chunky line in Alfa Slab One. Replaces the
+ * earlier EDGE/MERE split-color treatment which felt editorial / SaaS-y.
+ * This is the painted-on-the-window version.
  */
-export default function Wordmark({ size = 56, layout = "column" }: Props) {
-  const flexDirection = layout === "row" ? "row" : "column";
+export default function Wordmark({ size = 40, color }: Props) {
   return (
-    <View style={[styles.wrap, { flexDirection }]}>
-      <Text style={[styles.half, { fontSize: size, color: theme.colors.white }]}>
-        EDGE
-      </Text>
+    <View style={styles.wrap}>
       <Text
         style={[
-          styles.half,
-          styles.italic,
-          { fontSize: size, color: theme.colors.goldLight },
+          styles.word,
+          { fontSize: size, color: color ?? theme.colors.ink, lineHeight: size * 1.05 },
         ]}
       >
-        MERE
+        EDGEMERE
       </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  half: {
-    fontFamily: theme.fonts.displayBold,
-    lineHeight: undefined,
-    letterSpacing: 1,
+  wrap: { alignItems: "center" },
+  word: {
+    fontFamily: theme.fonts.display,
+    letterSpacing: 2,
+    textAlign: "center",
     includeFontPadding: false,
-  },
-  italic: {
-    fontFamily: theme.fonts.displayBoldItalic,
-    fontStyle: "italic",
   },
 });

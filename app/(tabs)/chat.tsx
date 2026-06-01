@@ -10,23 +10,23 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Send } from "lucide-react-native";
-import { SHOP, theme } from "../theme";
-import BarberAvatar from "../components/BarberAvatar";
+import { SHOP, theme } from "../../theme";
+import EddiePortrait from "../../components/EddiePortrait";
+import { ArrowIcon } from "../../components/LinocutIcons";
 
 type Message = { role: "user" | "assistant"; content: string };
 
 const WELCOME: Message = {
   role: "assistant",
   content:
-    "Hey — I'm Eddie, Edgemere's AI barber. Ask me about hours, prices, the barbers, walk-in wait, or anything else.",
+    "Hey — I'm Eddie, Edgemere's barbershop helper. Ask me about hours, prices, the barbers, walk-in wait, or anything else.",
 };
 
 const QUICKS = [
   "What are your hours?",
-  "How busy are you right now?",
-  "Which barber for fades?",
-  "Do you take walk-ins?",
+  "How busy now?",
+  "Best barber for a fade?",
+  "Walk-ins okay?",
 ];
 
 export default function ChatScreen() {
@@ -71,7 +71,6 @@ export default function ChatScreen() {
           return;
         }
 
-        // RN's fetch doesn't expose ReadableStream — read the full body once.
         const fullText = await res.text();
         setMessages((p) => [...p, { role: "assistant", content: fullText }]);
       } catch {
@@ -95,6 +94,15 @@ export default function ChatScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 96 : 0}
       style={styles.root}
     >
+      {/* Eddie shop-keeper portrait at top */}
+      <View style={styles.portraitWrap}>
+        <EddiePortrait size={68} framed />
+        <View>
+          <Text style={styles.portraitName}>EDDIE</Text>
+          <Text style={styles.portraitRole}>your shop helper</Text>
+        </View>
+      </View>
+
       <ScrollView
         ref={scrollRef}
         style={styles.scroll}
@@ -108,7 +116,7 @@ export default function ChatScreen() {
               m.role === "user" ? styles.rowUser : styles.rowAssistant,
             ]}
           >
-            {m.role === "assistant" && <BarberAvatar size={30} ringed />}
+            {m.role === "assistant" && <EddiePortrait size={36} framed />}
             <View
               style={[
                 styles.bubble,
@@ -123,7 +131,7 @@ export default function ChatScreen() {
         ))}
         {streaming && (
           <View style={[styles.row, styles.rowAssistant]}>
-            <BarberAvatar size={30} ringed />
+            <EddiePortrait size={36} framed />
             <View
               style={[
                 styles.bubble,
@@ -131,12 +139,13 @@ export default function ChatScreen() {
                 { minHeight: 40, justifyContent: "center", paddingHorizontal: 16 },
               ]}
             >
-              <ActivityIndicator color={theme.colors.gold} size="small" />
+              <ActivityIndicator color={theme.colors.ink} size="small" />
             </View>
           </View>
         )}
       </ScrollView>
 
+      {/* Quick prompts as torn ticket stubs */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -160,7 +169,7 @@ export default function ChatScreen() {
           value={input}
           onChangeText={setInput}
           placeholder="Ask Eddie…"
-          placeholderTextColor="rgba(242,239,232,0.35)"
+          placeholderTextColor={theme.colors.inkFaint}
           style={styles.input}
           multiline
           editable={!streaming}
@@ -175,7 +184,7 @@ export default function ChatScreen() {
           onPress={() => send(input)}
           accessibilityLabel="Send message"
         >
-          <Send size={15} color={theme.colors.black} strokeWidth={2.4} />
+          <ArrowIcon size={18} color={theme.colors.poleCream} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -183,9 +192,34 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.colors.black },
+  root: { flex: 1, backgroundColor: theme.colors.paper },
+
+  portraitWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderBottomWidth: 1.5,
+    borderBottomColor: theme.colors.ink,
+    borderStyle: "dashed",
+    backgroundColor: theme.colors.paperDark,
+  },
+  portraitName: {
+    fontFamily: theme.fonts.display,
+    color: theme.colors.ink,
+    fontSize: 22,
+    letterSpacing: 3,
+  },
+  portraitRole: {
+    fontFamily: theme.fonts.script,
+    color: theme.colors.poleRed,
+    fontSize: 14,
+    letterSpacing: 0.5,
+  },
+
   scroll: { flex: 1 },
-  scrollContent: { padding: 16, gap: 12 },
+  scrollContent: { padding: 14, gap: 12 },
   row: { flexDirection: "row", alignItems: "flex-end", gap: 9 },
   rowUser: { justifyContent: "flex-end" },
   rowAssistant: { justifyContent: "flex-start" },
@@ -193,89 +227,89 @@ const styles = StyleSheet.create({
     maxWidth: "78%",
     paddingHorizontal: 14,
     paddingVertical: 11,
-    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: theme.colors.ink,
   },
   bubbleUser: {
-    backgroundColor: theme.colors.gold,
-    borderBottomRightRadius: 4,
+    backgroundColor: theme.colors.poleRed,
+    borderColor: theme.colors.poleRedDark,
+    // Torn-paper look: irregular bottom-right corner
+    borderBottomRightRadius: 0,
   },
   bubbleAssistant: {
-    backgroundColor: "rgba(201,169,110,0.07)",
-    borderTopLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: "rgba(201,169,110,0.2)",
+    backgroundColor: theme.colors.paperDark,
+    borderTopLeftRadius: 0,
   },
   textUser: {
-    fontFamily: theme.fonts.body,
-    color: theme.colors.black,
+    fontFamily: theme.fonts.typewriter,
+    color: theme.colors.poleCream,
     fontSize: 14,
-    lineHeight: 21,
-    letterSpacing: 0.2,
+    lineHeight: 22,
+    letterSpacing: 0.3,
   },
   textAssistant: {
-    fontFamily: theme.fonts.body,
-    color: theme.colors.white,
+    fontFamily: theme.fonts.typewriter,
+    color: theme.colors.ink,
     fontSize: 14,
-    lineHeight: 21,
-    letterSpacing: 0.2,
+    lineHeight: 22,
+    letterSpacing: 0.3,
   },
+
   quicks: {
-    maxHeight: 46,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(201,169,110,0.12)",
+    maxHeight: 48,
+    borderTopWidth: 1.5,
+    borderTopColor: theme.colors.ink,
+    borderStyle: "dashed",
+    backgroundColor: theme.colors.paperDark,
   },
   quicksContent: { padding: 10, gap: 8, alignItems: "center" },
   quickBtn: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: "rgba(201,169,110,0.32)",
-    borderRadius: 999,
-    backgroundColor: "rgba(201,169,110,0.06)",
+    borderWidth: 1.5,
+    borderColor: theme.colors.ink,
+    backgroundColor: theme.colors.paper,
   },
   quickBtnText: {
-    fontFamily: theme.fonts.bodyMedium,
-    color: "rgba(242,239,232,0.7)",
-    fontSize: 11.5,
-    letterSpacing: 0.3,
+    fontFamily: theme.fonts.typewriter,
+    color: theme.colors.ink,
+    fontSize: 11,
+    letterSpacing: 0.4,
   },
+
   inputBar: {
     flexDirection: "row",
-    padding: 11,
-    gap: 9,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(201,169,110,0.14)",
+    padding: 10,
+    gap: 8,
+    borderTopWidth: 1.5,
+    borderTopColor: theme.colors.ink,
     alignItems: "flex-end",
-    backgroundColor: theme.colors.black2,
+    backgroundColor: theme.colors.paperDark,
   },
   input: {
     flex: 1,
-    color: theme.colors.white,
-    fontFamily: theme.fonts.body,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    borderRadius: 10,
+    color: theme.colors.ink,
+    fontFamily: theme.fonts.typewriter,
+    backgroundColor: theme.colors.paper,
+    borderWidth: 1.5,
+    borderColor: theme.colors.ink,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
     maxHeight: 100,
-    letterSpacing: 0.2,
-    borderWidth: 1,
-    borderColor: "rgba(201,169,110,0.18)",
+    letterSpacing: 0.3,
   },
   sendBtn: {
-    backgroundColor: theme.colors.gold,
+    backgroundColor: theme.colors.poleRed,
+    borderWidth: 1.5,
+    borderColor: theme.colors.poleRedDark,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderRadius: 10,
-    minWidth: 44,
+    minWidth: 48,
     alignItems: "center",
-    shadowColor: theme.colors.gold,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
   },
   sendBtnDisabled: {
-    backgroundColor: "rgba(201,169,110,0.3)",
-    shadowOpacity: 0,
+    backgroundColor: theme.colors.inkFainter,
+    borderColor: theme.colors.inkFaint,
   },
 });

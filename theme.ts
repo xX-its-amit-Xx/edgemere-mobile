@@ -1,32 +1,38 @@
-// Shared design tokens — mirror the website's CSS vars.
+// Edgemere mobile design tokens — "Shop Window" rebrand.
+// Cream paper, deep ink, barber-pole red and blue. Slab serifs and typewriter
+// for body. Gilt is a rare accent only (hardware highlights), not the dominant
+// color. Mirrors the visual language of a real 1920s American barbershop —
+// not a SaaS dashboard.
 
 export const theme = {
   colors: {
-    gold: "#c9a96e",
-    goldDark: "#a07840",
-    goldLight: "#e8c98a",
-    black: "#080808",
-    black2: "#101010",
-    black3: "#181818",
-    white: "#f2efe8",
-    whiteFaint: "rgba(242,239,232,0.65)",
-    whiteFainter: "rgba(242,239,232,0.45)",
-    success: "#22c55e",
-    danger: "#f87171",
+    paper: "#f4ecd8",        // dominant background — warm off-white
+    paperDark: "#e8dcc0",    // card surface — slightly darker cream
+    paperShadow: "#d8c9a0",  // shadow lines, hairline ink
+    ink: "#1a1410",          // body text + heavy ink
+    inkSoft: "rgba(26,20,16,0.72)",
+    inkFaint: "rgba(26,20,16,0.45)",
+    inkFainter: "rgba(26,20,16,0.22)",
+    poleRed: "#c8312a",      // primary CTA, barber-pole red stripe
+    poleRedDark: "#a4241e",
+    poleBlue: "#1f4a7a",     // secondary accent, barber-pole blue stripe
+    poleBlueDark: "#163758",
+    poleCream: "#f8f3e3",    // white stripe of the pole
+    brass: "#a07840",        // metal hardware (sparing)
+    brassLight: "#d4a455",
+    success: "#5a8a3a",      // OPEN sign green (muted, not neon)
+    danger: "#a4241e",       // CLOSED red (matches pole-red-dark)
   },
-  // Loaded via @expo-google-fonts in app/_layout.tsx. Until fontsReady,
-  // text falls back to system serif/sans — we hold rendering with a splash.
   fonts: {
-    displayRegular: "CormorantGaramond_400Regular",
-    displayItalic: "CormorantGaramond_400Regular_Italic",
-    displayBold: "CormorantGaramond_700Bold",
-    displayBoldItalic: "CormorantGaramond_700Bold_Italic",
-    body: "PlusJakartaSans_400Regular",
-    bodyMedium: "PlusJakartaSans_500Medium",
-    bodyBold: "PlusJakartaSans_700Bold",
-    bodyExtraBold: "PlusJakartaSans_800ExtraBold",
+    // Loaded via @expo-google-fonts in _layout.tsx
+    display: "AlfaSlabOne_400Regular",       // sign-painter slab — wordmark + big headers
+    script: "Limelight_400Regular",          // Art Deco condensed caps — accents like "Est. 2010"
+    typewriter: "SpecialElite_400Regular",   // ticket/label feel
+    body: "PublicSans_400Regular",
+    bodyMedium: "PublicSans_500Medium",
+    bodyBold: "PublicSans_700Bold",
   },
-  radii: { sm: 6, md: 10, lg: 16, pill: 9999 },
+  radii: { sm: 2, md: 4, lg: 8, pill: 9999 },  // mostly square — paper signs don't have rounded corners
   spacing: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
 } as const;
 
@@ -37,8 +43,6 @@ export const SHOP = {
   address: "129 Hartford Tpke, Shrewsbury, MA 01545",
   booksy: "https://booksy.com/en-us/1369750_edgemere-barbershop_barber-shop_22487_shrewsbury",
   apiBase: "https://edgemerebarbershop.com",
-  // Same hero photo as the website's <Hero /> background.
-  heroPhoto: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1200&auto=format&fit=crop",
   barbers: [
     {
       key: "jb",
@@ -64,5 +68,14 @@ export const SHOP = {
       reviews: 177,
       booksy: "https://booksy.com/en-us/508548_bald-barber-edgemere-barbershop_barber-shop_22487_shrewsbury",
     },
+  ],
+  services: [
+    { name: "Classic Cut", price: "$30" },
+    { name: "Fade", price: "$30–35" },
+    { name: "Kids Cut", price: "$27" },
+    { name: "Beard Trim", price: "$15–25" },
+    { name: "Hot Towel Shave", price: "$35–50" },
+    { name: "Cut + Shave", price: "$60–75" },
+    { name: "The Works", price: "$75" },
   ],
 } as const;

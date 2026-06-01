@@ -14,8 +14,12 @@
     "submit:android": "eas submit --platform android"
   },
   "dependencies": {
+    "@expo-google-fonts/alfa-slab-one": "^0.4.1",
     "@expo-google-fonts/cormorant-garamond": "^0.4.1",
+    "@expo-google-fonts/limelight": "^0.4.1",
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
+    "@expo-google-fonts/public-sans": "^0.4.2",
+    "@expo-google-fonts/special-elite": "^0.4.1",
     "@expo/metro-runtime": "~4.0.1",
     "expo": "~52.0.0",
     "expo-asset": "~11.0.5",
