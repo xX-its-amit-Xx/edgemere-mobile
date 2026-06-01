@@ -4,6 +4,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { theme } from "../theme";
 
@@ -18,51 +19,67 @@ type Props = {
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 /**
- * Cream paper sign with thick ink border + double-layer ink shadow. The
- * shadow is two boxes stacked behind (a hard +3 offset + a soft +6 offset)
- * — gives the "tacked to a corkboard" depth instead of a flat CSS shadow.
+ * 3D PaperCard. Three layers:
+ *   1. Soft shadow — far back, +14px down with blur, gives ambient lift
+ *   2. Hard stamp shadow — +5px down-right offset, gives the "tacked up" hard edge
+ *   3. Face — the cream card with dashed inner border + a thin top highlight
+ *      so the paper edge catches light from above
  *
- * On press (when onPress is set), the card scales down and the shadow
- * collapses — modern app interaction, vintage paper aesthetic.
+ * On press: face scales 0.97, soft shadow collapses, hard shadow tightens
+ * to +2. The card visibly "settles" into the surface rather than just
+ * shrinking.
  */
 export default function PaperCard({ children, onPress, style, tilt = 0 }: Props) {
-  const scale = useSharedValue(1);
-  const lift = useSharedValue(0);
+  const press = useSharedValue(0);
 
-  const animStyle = useAnimatedStyle(() => ({
+  const faceStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: scale.value },
-      ...(tilt ? [{ rotate: `${tilt + lift.value * 0.4}deg` }] : []),
-      { translateY: -lift.value },
+      { scale: 1 - press.value * 0.025 },
+      ...(tilt ? [{ rotate: `${tilt}deg` }] : []),
+      { translateY: press.value * 2 },
     ],
   }));
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.985, { damping: 16, stiffness: 280 });
-    lift.value = withSpring(0, { damping: 16, stiffness: 280 });
-  };
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 16, stiffness: 280 });
-    lift.value = withSpring(0, { damping: 16, stiffness: 280 });
-  };
+  const softStyle = useAnimatedStyle(() => ({
+    opacity: 0.18 - press.value * 0.12,
+    transform: [{ translateY: 14 - press.value * 10 }],
+  }));
 
-  // Outer hard-shadow layer (offset +6, no blur) gives the paper-tacked look.
-  // Inner card has its own shadow for a softer depth — combined they read 3D.
+  const hardStyle = useAnimatedStyle(() => ({
+    opacity: 1 - press.value * 0.4,
+    transform: [
+      { translateY: 5 - press.value * 3 },
+      { translateX: 5 - press.value * 3 },
+    ],
+  }));
+
   const inner = (
-    <AnimatedView
-      style={[
-        styles.card,
-        tilt && !onPress ? { transform: [{ rotate: `${tilt}deg` }] } : null,
-        onPress ? animStyle : null,
-      ]}
-    >
-      <View style={styles.innerBorder}>{children}</View>
-    </AnimatedView>
+    <View style={styles.layoutWrap}>
+      {/* Soft ambient shadow — far back */}
+      <AnimatedView style={[styles.softShadow, softStyle, tilt ? { transform: [{ rotate: `${tilt}deg` }] } : null]} />
+      {/* Hard stamp shadow — gives the "paper tacked to wood" feel */}
+      <AnimatedView style={[styles.hardShadow, hardStyle, tilt ? { transform: [{ rotate: `${tilt}deg` }] } : null]} />
+      {/* Face */}
+      <AnimatedView style={[styles.face, faceStyle]}>
+        {/* Top highlight rim — catches "light from above" */}
+        <View style={styles.faceHighlight} pointerEvents="none" />
+        <View style={styles.innerBorder}>{children}</View>
+      </AnimatedView>
+    </View>
   );
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut} style={style}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => {
+          press.value = withSpring(1, { damping: 18, stiffness: 320 });
+        }}
+        onPressOut={() => {
+          press.value = withSpring(0, { damping: 18, stiffness: 320 });
+        }}
+        style={style}
+      >
         {inner}
       </Pressable>
     );
@@ -71,17 +88,42 @@ export default function PaperCard({ children, onPress, style, tilt = 0 }: Props)
 }
 
 const styles = StyleSheet.create({
-  card: {
+  layoutWrap: {
+    position: "relative",
+  },
+  softShadow: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: theme.colors.ink,
+    opacity: 0.18,
+    // Mimic blur via larger extent (RN doesn't have free blur on shadow color)
+  },
+  hardShadow: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: theme.colors.ink,
+  },
+  face: {
     backgroundColor: theme.colors.paperDark,
     borderWidth: 2,
     borderColor: theme.colors.ink,
     padding: 6,
-    // Two-axis ink shadow for the "paper on a wall" feel
-    shadowColor: theme.colors.ink,
-    shadowOffset: { width: 4, height: 5 },
-    shadowOpacity: 0.22,
-    shadowRadius: 0,
-    elevation: 5,
+    position: "relative",
+    overflow: "hidden",
+  },
+  faceHighlight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: "rgba(255,250,235,0.4)",
   },
   innerBorder: {
     borderWidth: 1,
